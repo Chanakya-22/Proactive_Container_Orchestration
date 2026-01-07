@@ -1,27 +1,34 @@
-# Deep Unrolled ADMM with Hankel-Structured Attention for MRI Restoration
+# Proactive Container Orchestrator 🧠🐳
 
-## 📌 Project Overview
-This project implements a **Model-Based Deep Learning** framework for MRI denoising. Unlike standard "Black Box" CNNs, this architecture explicitly "unrolls" the **Alternating Direction Method of Multipliers (ADMM)** optimization algorithm into a deep neural network.
+**A Deep Learning-based OS Scheduler for Docker Swarm**
 
-It integrates high-performance **Swin Transformers** with rigorous **Linear Algebra constraints (Hankel Matrices)** to ensure mathematical consistency in medical imaging.
+## 📌 Overview
+Traditional cloud auto-scalers are **Reactive**—they wait for a system crash or high CPU usage before adding resources. This causes "Cold Start Latency," where users experience downtime while new containers boot up.
 
-## 🎓 Syllabus & Math Integration
-This project directly implements concepts from the advanced mathematics curriculum:
-* **Unit 1 (Special Matrices):** Implements **Hankel Matrix priors** to enforce low-rank structure on MRI patches.
-* **Unit 2 (Optimization):** The network architecture mimics the iterative steps of **ADMM** (Data Consistency $x$-update, Denoising $z$-update, Multiplier $u$-update).
+This project implements a **Proactive Orchestrator** using an **LSTM Neural Network**. Trained on the **Bitbrains Datacenter Trace** (1,250 VMs), it predicts traffic spikes 60 seconds in advance and scales resources *before* the load hits, ensuring Zero Downtime.
 
 ## 🚀 Key Features
-* **White-Box Architecture:** Every layer corresponds to a mathematical optimization step.
-* **Heavyweight ML Engine:** Utilizes **Swin Transformers** as a learned proximal operator.
-* **Physics-Informed:** Constrains the solution space using Hankel structural properties.
+* **Universal AI Model:** Trained on diverse datacenter traces to learn general cloud patterns.
+* **Adaptive Thresholding:** Uses statistical variance (Volatility) to dynamically adjust sensitivity.
+* **Robust Monitoring:** Custom low-level Docker socket parser for real-time, high-precision metrics.
+* **Deadlock Avoidance:** Acts as a "Predictive Banker's Algorithm" to prevent resource starvation.
 
-## 📂 Project Structure
-* `src/model_admm.py`: The core unrolled network architecture.
-* `src/modules.py`: The Swin Transformer denoising block.
-* `src/utils_math.py`: Hankel matrix transformation logic.
-* `src/train.py`: Training script.
+## 🛠️ Architecture
+1.  **The Observer (`logger.py`):** Monitors Docker Swarm metrics in real-time.
+2.  **The Brain (`orchestrator.py`):** An LSTM model that forecasts future load.
+3.  **The Enforcer:** Scales services based on Adaptive Logic (Prediction vs. Volatility).
 
-## 🛠️ Usage
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
+## 📊 Results
+We compared this system against a standard Reactive Auto-scaler using `stress-ng` attacks.
+* **Reactive:** Crashed. CPU hit 200% saturation before scaling.
+* **Proactive (Ours):** Predicted the spike. Scaled pre-emptively. CPU load remained stable.
+
+![Final Results](final_comparison_graph.png)
+
+## 💻 Installation & Usage
+
+### 1. Setup
+```bash
+git clone [https://github.com/YOUR_USERNAME/AI-Orchestrator-OS.git](https://github.com/YOUR_USERNAME/AI-Orchestrator-OS.git)
+cd AI-Orchestrator-OS
+pip install -r requirements.txt

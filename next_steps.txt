@@ -1,0 +1,15 @@
+PROJECT ROADMAP & FUTURE WORK
+
+1. EXTEND DATASET
+   - Current: Trained on 5-10 Bitbrains trace files.
+   - Future: Train on the full 1TB Google Cluster Trace to improve model generalization.
+
+2. EDGE COMPUTING DEPLOYMENT
+   - Test the lightweight LSTM model on Raspberry Pi clusters (K3s) to prove Edge capability.
+
+3. REINFORCEMENT LEARNING (RL)
+   - Replace the "Threshold Logic" with a Q-Learning agent that receives "Rewards" for uptime and "Penalties" for wasting resources.
+
+4. NETWORK METRICS
+   - Currently predicting CPU only.
+   - Future: Add Network I/O and Memory Bandwidth to the LSTM input vector for multi-variate forecasting.
