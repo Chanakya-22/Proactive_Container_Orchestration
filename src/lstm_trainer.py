@@ -9,16 +9,15 @@ import os
 
 # --- CONFIGURATION ---
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'lstm_training_data.csv')
-MODEL_DIR = os.path.join(BASE_DIR, 'models')
-MODEL_FILE = os.path.join(MODEL_DIR, 'orchestrator_brain.h5')
-GRAPH_FILE = os.path.join(MODEL_DIR, 'training_accuracy.png')
+# Point to the NEW Universal file
+INPUT_FILE = os.path.join(BASE_DIR, 'data', 'processed', 'universal_training_data.csv')
+MODEL_FILE = os.path.join(BASE_DIR, 'models', 'orchestrator_brain.h5')
+GRAPH_FILE = os.path.join(BASE_DIR, 'models', 'training_accuracy.png')
 
-# --- HYPERPARAMETERS (Tuned for Legion 5i / Bitbrains) ---
-WINDOW_SIZE = 60       # Look back 1 hour (assuming 1 min intervals)
-PREDICT_HORIZON = 1    # Predict next step
-EPOCHS = 30            # More epochs because data is complex
-BATCH_SIZE = 128       # Larger batch size for your 14900HX/4060
+WINDOW_SIZE = 60
+PREDICT_HORIZON = 1
+EPOCHS = 20
+BATCH_SIZE = 128  # Increased for speed
 
 def create_sequences(data, seq_length):
     xs, ys = [], []
@@ -30,42 +29,41 @@ def create_sequences(data, seq_length):
     return np.array(xs), np.array(ys)
 
 def train_brain():
-    print("--- PHASE 2: TRAINING (Bitbrains Deep Learning) ---")
+    print("--- PHASE 2: UNIVERSAL MODEL TRAINING ---")
     
     if not os.path.exists(INPUT_FILE):
-        print(f"ERROR: {INPUT_FILE} not found. Run processor first.")
+        print(f"ERROR: {INPUT_FILE} not found. Run data_loader_universal.py first.")
         return
     
-    print("1. Loading Data...")
+    print("1. Loading Universal Data...")
     df = pd.read_csv(INPUT_FILE)
     dataset = df.values
     
-    print(f"   Loaded {len(dataset):,} rows. Creating Sequences...")
+    # Validation: Ensure we have enough data
+    if len(dataset) < 1000:
+        print("Error: Dataset too small. Did you load multiple CSVs?")
+        return
+
+    print(f"   Dataset Size: {len(dataset):,} rows. Creating Sequences...")
     X, y = create_sequences(dataset, WINDOW_SIZE)
     
-    # Split Train/Val
     train_size = int(len(X) * 0.8)
     X_train, X_val = X[:train_size], X[train_size:]
     y_train, y_val = y[:train_size], y[train_size:]
     
-    print(f"   Training on {len(X_train):,} samples.")
-
-    print("2. Building Model...")
+    print("2. Building LSTM Architecture...")
     model = Sequential([
-        # Layer 1
         LSTM(units=100, return_sequences=True, input_shape=(X_train.shape[1], 1)),
         Dropout(0.2),
-        # Layer 2
         LSTM(units=50, return_sequences=False),
         Dropout(0.2),
-        # Output
         Dense(units=1)
     ])
     
     model.compile(optimizer='adam', loss='mean_squared_error')
     
-    print("3. Training (GPU Accelerated if available)...")
-    early_stop = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
+    print("3. Training...")
+    early_stop = EarlyStopping(monitor='val_loss', patience=3, restore_best_weights=True)
     
     history = model.fit(
         X_train, y_train,
@@ -77,15 +75,15 @@ def train_brain():
     )
     
     print(f"4. Saving Model to {MODEL_FILE}...")
-    os.makedirs(MODEL_DIR, exist_ok=True)
+    os.makedirs(os.path.dirname(MODEL_FILE), exist_ok=True)
     model.save(MODEL_FILE)
     
-    # Graph
+    # Plotting
     plt.figure(figsize=(10,6))
     plt.plot(history.history['loss'], label='Training Loss')
     plt.plot(history.history['val_loss'], label='Validation Loss')
-    plt.title('Bitbrains Model Convergence')
-    plt.ylabel('MSE Loss')
+    plt.title('Universal Model Convergence')
+    plt.ylabel('MSE')
     plt.xlabel('Epoch')
     plt.legend()
     plt.savefig(GRAPH_FILE)

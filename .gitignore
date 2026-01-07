@@ -1,0 +1,18 @@
+# Python Checkpoints and Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Datasets (Keep your data local!)
+brain_tumor_dataset/
+*.jpg
+*.png
+*.dcm
+
+# Model Checkpoints (Don't upload 500MB weights unless necessary)
+*.pth
+checkpoints/
+
+# System files
+.DS_Store
