@@ -4,3 +4,5 @@ tensorflow
 docker
 matplotlib
 scikit-learn
+flask
+psutil
