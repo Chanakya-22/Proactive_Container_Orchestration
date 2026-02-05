@@ -2,66 +2,57 @@ import docker
 import time
 import csv
 import psutil
-import subprocess
+import os
 
 SERVICE_NAME = "web_app"
-LOG_FILE = "live_metrics.csv"
-
-def get_docker_cpu(service_name):
-    """ Get Container CPU % """
-    try:
-        cmd_id = f"docker ps --filter label=com.docker.swarm.service.name={service_name} --format {{{{.ID}}}}"
-        output = subprocess.check_output(cmd_id, shell=True).decode().strip()
-        if not output: return 0.0
-        container_id = output.split('\n')[0]
-        cmd_stats = f"docker stats {container_id} --no-stream --format {{{{.CPUPerc}}}}"
-        stats_output = subprocess.check_output(cmd_stats, shell=True).decode().strip()
-        if not stats_output: return 0.0
-        return float(stats_output.replace('%', ''))
-    except:
-        return 0.0
+LOG_FILE = "system_metrics.csv"
 
 def log_metrics():
-    print("--- SYSTEM OBSERVER STARTED ---")
+    print("--- 🛰️ SYSTEM TELEMETRY STARTED ---")
     client = docker.from_env()
     
-    # Write Header
-    with open(LOG_FILE, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["Time", "Container_CPU", "Replicas", "Host_CPU", "Host_RAM", "Context_Switches"])
-
+    # Write Header (The 7 Attributes)
+    with open(LOG_FILE, 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Time", "CPU_Percent", "Memory_Percent", "Network_RX_MB", "Disk_Usage_Percent", "Context_Switches", "Replicas"])
+        
     start_time = time.time()
+    net_io_start = psutil.net_io_counters()
     
     while True:
+        elapsed = int(time.time() - start_time)
         try:
-            elapsed = int(time.time() - start_time)
-            
-            # 1. Container Metrics
+            # 1. Container Replicas
             try:
                 service = client.services.get(SERVICE_NAME)
                 replicas = service.attrs['Spec']['Mode']['Replicated']['Replicas']
             except:
                 replicas = 0
             
-            cont_cpu = get_docker_cpu(SERVICE_NAME)
+            # 2. Host Metrics (CPU, RAM, Disk)
+            cpu = psutil.cpu_percent(interval=None)
+            mem = psutil.virtual_memory().percent
+            disk = psutil.disk_usage('/').percent
             
-            # 2. HOST OS Metrics (The "Real-World" OS part)
-            host_cpu = psutil.cpu_percent()
-            host_ram = psutil.virtual_memory().percent
+            # 3. Network I/O (Delta)
+            net_io_now = psutil.net_io_counters()
+            net_rx_mb = (net_io_now.bytes_recv - net_io_start.bytes_recv) / 1024 / 1024
+            
+            # 4. Kernel Context Switches (OS Stress)
             ctx_switches = psutil.cpu_stats().ctx_switches
             
-            # 3. Save
-            with open(LOG_FILE, mode='a', newline='') as file:
-                writer = csv.writer(file)
-                writer.writerow([elapsed, cont_cpu, replicas, host_cpu, host_ram, ctx_switches])
-            
-            print(f"Time: {elapsed}s | Docker CPU: {cont_cpu}% | Host CPU: {host_cpu}%", end='\r')
+            # Save
+            with open(LOG_FILE, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([elapsed, cpu, mem, round(net_rx_mb, 2), disk, ctx_switches, replicas])
+                
+            print(f"Sec: {elapsed} | CPU: {cpu}% | RAM: {mem}% | Replicas: {replicas}", end='\r')
             time.sleep(1)
             
         except KeyboardInterrupt:
             break
         except Exception as e:
-            print(e)
+            print(f"Error: {e}")
             time.sleep(1)
 
 if __name__ == "__main__":

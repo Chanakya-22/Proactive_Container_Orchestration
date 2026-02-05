@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proactive Orchestrator V2.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #0b0c10; color: #c5c6c7; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card { background-color: #1f2833; border: 1px solid #45a29e; box-shadow: 0 0 15px rgba(69, 162, 158, 0.2); margin-bottom: 20px; }
+        .card-header { background-color: #0b0c10; color: #66fcf1; font-weight: bold; border-bottom: 1px solid #45a29e; }
+        .metric-box { text-align: center; padding: 15px; border-right: 1px solid #45a29e; }
+        .metric-val { font-size: 2em; font-weight: bold; color: #fff; }
+        .metric-label { font-size: 0.8em; text-transform: uppercase; color: #66fcf1; }
+        .highlight-danger { color: #ff4d4d; text-shadow: 0 0 10px #ff0000; }
+        .highlight-success { color: #00ff00; text-shadow: 0 0 10px #00ff00; }
+    </style>
+</head>
+<body class="p-3">
+    <div class="container-fluid">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-6">
+                <h2 style="color: #66fcf1;">⚡ PROACTIVE AI ORCHESTRATOR</h2>
+                <small>Real-Time Neural Scaling Monitor</small>
+            </div>
+            <div class="col-md-6 text-end">
+                <span class="badge bg-success p-2">SYSTEM ACTIVE</span>
+                <span class="badge bg-secondary p-2">MODE: ADAPTIVE</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <div class="col metric-box">
+                        <div class="metric-label">CPU Load</div>
+                        <div id="val-cpu" class="metric-val">0%</div>
+                    </div>
+                    <div class="col metric-box">
+                        <div class="metric-label">Avg Latency</div>
+                        <div id="val-lat" class="metric-val">0ms</div>
+                    </div>
+                    <div class="col metric-box">
+                        <div class="metric-label">Throughput</div>
+                        <div id="val-rps" class="metric-val">0/s</div>
+                    </div>
+                    <div class="col metric-box">
+                        <div class="metric-label">Tokens Lost</div>
+                        <div id="val-loss" class="metric-val highlight-danger">0</div>
+                    </div>
+                    <div class="col metric-box">
+                        <div class="metric-label">Replicas</div>
+                        <div id="val-rep" class="metric-val highlight-success">1</div>
+                    </div>
+                    <div class="col metric-box">
+                        <div class="metric-label">Memory</div>
+                        <div id="val-mem" class="metric-val">0%</div>
+                    </div>
+                    <div class="col metric-box" style="border:none;">
+                        <div class="metric-label">Network</div>
+                        <div id="val-net" class="metric-val">0MB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card h-100">
+                    <div class="card-header">1. Latency & CPU Correlation (The Critical Link)</div>
+                    <div class="card-body">
+                        <canvas id="mainChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-header">2. Scaling vs Throughput</div>
+                    <div class="card-body">
+                        <canvas id="scaleChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">3. Service Degradation (Tokens Lost)</div>
+                    <div class="card-body">
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">4. Network Ingestion (MB/s)</div>
+                    <div class="card-body">
+                        <canvas id="netChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Main Chart (CPU & Latency) ---
+        const mainCtx = document.getElementById('mainChart').getContext('2d');
+        const mainChart = new Chart(mainCtx, {
+            type: 'line',
+            data: { 
+                labels: [], 
+                datasets: [
+                    { label: 'CPU %', borderColor: '#45a29e', borderWidth: 2, tension: 0.4, data: [], yAxisID: 'y' },
+                    { label: 'Latency (ms)', borderColor: '#ff6b6b', borderWidth: 2, borderDash: [5, 5], data: [], yAxisID: 'y1' }
+                ] 
+            },
+            options: { 
+                responsive: true,
+                scales: { 
+                    y: { position: 'left', min: 0, max: 100, title: {display: true, text: 'CPU %'} },
+                    y1: { position: 'right', title: {display: true, text: 'Latency (ms)'} }
+                }
+            }
+        });
+
+        // --- 2. Scale Chart (Replicas vs Throughput) ---
+        const scaleCtx = document.getElementById('scaleChart').getContext('2d');
+        const scaleChart = new Chart(scaleCtx, {
+            type: 'bar',
+            data: { 
+                labels: [], 
+                datasets: [
+                    { label: 'Replicas', backgroundColor: '#66fcf1', data: [], type: 'line', borderColor: '#66fcf1' },
+                    { label: 'Req/Sec', backgroundColor: 'rgba(255, 255, 255, 0.1)', data: [] }
+                ] 
+            }
+        });
+
+        // --- 3. Loss Chart ---
+        const lossCtx = document.getElementById('lossChart').getContext('2d');
+        const lossChart = new Chart(lossCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Tokens Lost', borderColor: '#ff4d4d', backgroundColor: 'rgba(255, 77, 77, 0.3)', fill: true, data: [] }] }
+        });
+
+        // --- 4. Net Chart ---
+        const netCtx = document.getElementById('netChart').getContext('2d');
+        const netChart = new Chart(netCtx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Network MB', borderColor: '#c5c6c7', data: [] }] }
+        });
+
+        // --- Live Data Polling ---
+        setInterval(() => {
+            fetch('/api/data').then(r => r.json()).then(data => {
+                if(!data.sys_time) return;
+
+                const len = data.sys_time.length;
+                const last = len - 1;
+
+                // Update Numbers
+                document.getElementById('val-cpu').innerText = data.cpu[last] + "%";
+                document.getElementById('val-rep').innerText = data.replicas[last];
+                document.getElementById('val-mem').innerText = data.mem[last] + "%";
+                document.getElementById('val-net').innerText = Math.round(data.net[last]) + "MB";
+
+                if(data.latency) {
+                    document.getElementById('val-lat').innerText = Math.round(data.latency[last]) + "ms";
+                    document.getElementById('val-rps').innerText = data.throughput[last];
+                    document.getElementById('val-loss').innerText = data.tokens_lost[last];
+                }
+
+                // Update Main Chart
+                mainChart.data.labels = data.sys_time;
+                mainChart.data.datasets[0].data = data.cpu;
+                if(data.latency) mainChart.data.datasets[1].data = data.latency;
+                mainChart.update();
+
+                // Update Scale Chart
+                scaleChart.data.labels = data.sys_time;
+                scaleChart.data.datasets[0].data = data.replicas;
+                if(data.throughput) scaleChart.data.datasets[1].data = data.throughput;
+                scaleChart.update();
+
+                // Update Loss Chart
+                if(data.tokens_lost) {
+                    lossChart.data.labels = data.sys_time;
+                    lossChart.data.datasets[0].data = data.tokens_lost;
+                    lossChart.update();
+                }
+
+                // Update Net Chart
+                netChart.data.labels = data.sys_time;
+                netChart.data.datasets[0].data = data.net;
+                netChart.update();
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

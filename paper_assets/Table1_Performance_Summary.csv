@@ -1,0 +1,6 @@
+Metric,Value
+Avg Latency,3.01 ms
+Max CPU,21.20 %
+Total Tokens Lost,0
+Avg Throughput,1269.36 req/s
+Max Replicas,1

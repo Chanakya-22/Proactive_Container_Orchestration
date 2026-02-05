@@ -6,3 +6,12 @@ matplotlib
 scikit-learn
 flask
 psutil
+
+requests
+seaborn
+
+requests
+seaborn
+
+requests
+seaborn
